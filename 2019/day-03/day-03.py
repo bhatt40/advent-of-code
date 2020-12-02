@@ -26,6 +26,8 @@ def get_coordinate_set_from_path(starting_coordinate, path):
                 map(lambda x: (current_coordinate[0] + x, current_coordinate[1]), range(1, move_distance + 1))
             )
             current_coordinate = [current_coordinate[0] + move_distance, current_coordinate[1]]
+        else:
+            raise Exception('Invalid direction: {}'.format(move_direction))
 
         for index, coordinate in enumerate(new_coordinates):
             coordinate_distance_dict[coordinate] = current_distance + (index + 1)
