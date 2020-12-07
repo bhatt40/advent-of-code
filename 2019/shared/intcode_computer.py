@@ -70,8 +70,8 @@ class IntcodeComputer:
         if opcode != 4 and value is not None:
             self.memory[index] = value
 
-    def push_new_input(self, new_input):
-        self.inputs.push(new_input)
+    def append_new_input(self, new_input):
+        self.inputs.append(new_input)
         self.is_suspended = False
 
     def get_is_complete(self):

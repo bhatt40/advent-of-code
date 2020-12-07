@@ -36,3 +36,6 @@ memory = [3, 21, 1008, 21, 8, 20, 1005, 20, 22, 107, 8, 21, 20, 1006, 20, 31, 11
 run_test(memory, [7])
 run_test(memory, [8])
 run_test(memory, [9])
+
+
+
