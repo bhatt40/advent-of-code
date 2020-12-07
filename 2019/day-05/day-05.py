@@ -9,10 +9,10 @@ with open('input.txt', 'r') as f:
 inputs = [1]
 part1_intcode_computer = IntcodeComputer(origin_memory, inputs)
 part1_intcode_computer.run()
-print(part1_intcode_computer.get_outputs())
+print(part1_intcode_computer.pop_last_output())
 
 # Part 2
 inputs = [5]
 part2_intcode_computer = IntcodeComputer(origin_memory, inputs)
 part2_intcode_computer.run()
-print(part2_intcode_computer.get_outputs())
+print(part2_intcode_computer.pop_last_output())

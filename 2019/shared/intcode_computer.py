@@ -11,6 +11,7 @@ class IntcodeComputer:
         self.outputs = []
         self.memory_index = 0
         self.is_complete = False
+        self.is_suspended = False
 
     @staticmethod
     def read_instruction(instruction):
@@ -69,20 +70,21 @@ class IntcodeComputer:
         if opcode != 4 and value is not None:
             self.memory[index] = value
 
-    # @staticmethod
-    # def calculate_new_input_index(opcode, input_index):
-    #     if opcode == 3:
-    #         return input_index + 1
-    #     return input_index
+    def push_new_input(self, new_input):
+        self.inputs.push(new_input)
+        self.is_suspended = False
 
     def get_is_complete(self):
         return self.is_complete
 
-    def get_outputs(self):
-        return self.outputs
+    def pop_last_output(self):
+        try:
+            return self.outputs.pop()
+        except IndexError:
+            return None
 
     def run(self):
-        while self.memory_index < len(self.memory):
+        while not self.is_complete and not self.is_suspended:
             if self.memory[self.memory_index] == 99:
                 self.is_complete = True
                 break
@@ -94,6 +96,7 @@ class IntcodeComputer:
             try:
                 target_value = self.calculate_target_value(opcode, parameters)
             except Exception:
+                self.is_suspended = True
                 break
             target_index = self.calculate_target_index(opcode, parameters)
 
