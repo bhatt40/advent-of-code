@@ -1,4 +1,4 @@
-from intcode_computer import execute_intcode_instructions
+from intcode_computer import IntcodeComputer
 
 with open('input.txt', 'r') as f:
     origin_memory = [
@@ -6,13 +6,13 @@ with open('input.txt', 'r') as f:
     ]
 
 # Part 1
-inputs = (1, -99)
-part_1_memory = origin_memory.copy()
-output = execute_intcode_instructions(part_1_memory, inputs)
-print(output)
+inputs = [1]
+part1_intcode_computer = IntcodeComputer(origin_memory, inputs)
+part1_intcode_computer.run()
+print(part1_intcode_computer.get_outputs())
 
 # Part 2
-inputs = (5, -99)
-part_2_memory = origin_memory.copy()
-output = execute_intcode_instructions(part_2_memory, inputs)
-print(output)
+inputs = [5]
+part2_intcode_computer = IntcodeComputer(origin_memory, inputs)
+part2_intcode_computer.run()
+print(part2_intcode_computer.get_outputs())
