@@ -4,6 +4,7 @@ class IntcodeComputer:
     outputs = []
     memory_index = 0
     is_complete = False
+    relative_base = 0
 
     def __init__(self, initial_memory, initial_inputs):
         self.memory = initial_memory.copy()
@@ -13,6 +14,13 @@ class IntcodeComputer:
         self.is_complete = False
         self.is_suspended = False
 
+    def extend_memory_to_size(self, size):
+        current_memory_size = len(self.memory)
+        self.memory = [
+            self.memory[index] if index < current_memory_size else 0
+            for index in range(size)
+        ]
+
     @staticmethod
     def read_instruction(instruction):
         opcode = instruction % 100
@@ -21,15 +29,31 @@ class IntcodeComputer:
         parameter_modes = [
             (new_instruction // (10 ** x)) % 10 for x in range(parameter_count)
         ]
-        if opcode not in [4, 5, 6]:
-            parameter_modes[-1] = 1
-        return opcode, parameter_modes
+        write_parameter_indexes = [2] if opcode in [1, 2, 7, 8] else [0] if opcode == 3 else []
+        # write_parameter_indexes = [2] if opcode in [1, 2, 8] else [0] if opcode == 3 else []
+        return opcode, parameter_modes, write_parameter_indexes
 
-    def read_parameters(self, parameter_modes):
+    def read_parameter(self, parameter_mode, relative_index, write_parameter_indexes):
+        index = self.memory_index + relative_index + 1
+        raw = self.memory[index]
+        literal_mode = relative_index in write_parameter_indexes
+        if parameter_mode == 0:
+            if literal_mode:
+                return raw
+            return self.memory[raw]
+        elif parameter_mode == 1:
+            return raw
+        elif parameter_mode == 2:
+            if literal_mode:
+                return raw + self.relative_base
+            return self.memory[raw + self.relative_base]
+        else:
+            raise Exception('Unexpected parameter mode: {}'.format(parameter_mode))
+
+    def read_parameters(self, parameter_modes, write_parameter_indexes):
         return [
-            self.memory[self.memory[self.memory_index + index + 1]] if parameter_mode == 0 else
-            self.memory[self.memory_index + index + 1]
-            for index, parameter_mode in enumerate(parameter_modes)
+            self.read_parameter(parameter_mode, relative_index, write_parameter_indexes)
+            for relative_index, parameter_mode in enumerate(parameter_modes)
         ]
 
     def calculate_target_value(self, opcode, parameters):
@@ -52,6 +76,8 @@ class IntcodeComputer:
             return 1 if parameters[0] < parameters[1] else 0
         elif opcode == 8:
             return 1 if parameters[0] == parameters[1] else 0
+        elif opcode == 9:
+            return parameters[0]
 
         raise Exception('Invalid opcode: {}'.format(opcode))
 
@@ -62,13 +88,19 @@ class IntcodeComputer:
             return self.memory_index
         return parameters[0]
 
-    def write_to_output(self, opcode, value):
+    def write_to_output_or_relative_base(self, opcode, value):
         if opcode == 4:
             self.outputs.append(value)
+        elif opcode == 9:
+            self.relative_base += value
 
     def write_to_memory(self, opcode, index, value):
         if opcode != 4 and value is not None:
-            self.memory[index] = value
+            try:
+                self.memory[index] = value
+            except IndexError:
+                self.extend_memory_to_size(index + 1)
+                self.memory[index] = value
 
     def append_new_input(self, new_input):
         self.inputs.append(new_input)
@@ -85,13 +117,15 @@ class IntcodeComputer:
 
     def run(self):
         while not self.is_complete and not self.is_suspended:
-            if self.memory[self.memory_index] == 99:
+            instruction = self.memory[self.memory_index]
+            cached_memory_index = self.memory_index
+            if instruction == 99:
                 self.is_complete = True
                 break
 
-            instruction = self.memory[self.memory_index]
-            opcode, parameter_modes = self.read_instruction(instruction)
-            parameters = self.read_parameters(parameter_modes)
+            opcode, parameter_modes, write_parameter_indexes = self.read_instruction(instruction)
+            print(self.memory)
+            parameters = self.read_parameters(parameter_modes, write_parameter_indexes)
 
             try:
                 target_value = self.calculate_target_value(opcode, parameters)
@@ -100,10 +134,10 @@ class IntcodeComputer:
                 break
             target_index = self.calculate_target_index(opcode, parameters)
 
-            self.write_to_output(opcode, target_value)
+            self.write_to_output_or_relative_base(opcode, target_value)
             self.write_to_memory(opcode, target_index, target_value)
 
-            if self.memory[self.memory_index] == instruction:
+            if self.memory[cached_memory_index] == instruction:
                 self.memory_index += len(parameters) + 1
             else:
                 self.memory_index = target_value
