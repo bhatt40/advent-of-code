@@ -22,6 +22,20 @@ class IntcodeComputer:
             for index in range(size)
         ]
 
+    def safe_write_to_memory(self, index, value):
+        try:
+            self.memory[index] = value
+        except IndexError:
+            self.extend_memory_to_size(index + 1)
+            self.memory[index] = value
+
+    def safe_read_from_memory(self, index):
+        try:
+            return self.memory[index]
+        except IndexError:
+            self.extend_memory_to_size(index + 1)
+            return self.memory[index]
+
     @staticmethod
     def read_instruction(instruction):
         opcode = instruction % 100
@@ -30,7 +44,7 @@ class IntcodeComputer:
         parameter_modes = [
             (new_instruction // (10 ** x)) % 10 for x in range(parameter_count)
         ]
-        write_parameter_indexes = [2] if opcode in [1, 2, 7, 8] else [0] if opcode in [3, 9] else []
+        write_parameter_indexes = [2] if opcode in [1, 2, 7, 8] else [0] if opcode in [3] else []
         return opcode, parameter_modes, write_parameter_indexes
 
     def read_parameter(self, parameter_mode, relative_index, write_parameter_indexes):
@@ -40,13 +54,13 @@ class IntcodeComputer:
         if parameter_mode == 0:
             if literal_mode:
                 return raw
-            return self.memory[raw]
+            return self.safe_read_from_memory(raw)
         elif parameter_mode == 1:
             return raw
         elif parameter_mode == 2:
             if literal_mode:
                 return raw + self.relative_base
-            return self.memory[raw + self.relative_base]
+            return self.safe_read_from_memory(raw + self.relative_base)
         else:
             raise Exception('Unexpected parameter mode: {}'.format(parameter_mode))
 
@@ -56,16 +70,9 @@ class IntcodeComputer:
             for relative_index, parameter_mode in enumerate(parameter_modes)
         ]
 
-    def safe_write_to_memory(self, index, value):
-        try:
-            self.memory[index] = value
-        except IndexError:
-            self.extend_memory_to_size(index + 1)
-            self.memory[index] = value
-
     def execute_opcode(self, opcode, parameters):
         if opcode == 1:
-            self.memory[parameters[2]] = parameters[0] + parameters[1]
+            self.safe_write_to_memory(parameters[2], parameters[0] + parameters[1])
         elif opcode == 2:
             self.safe_write_to_memory(parameters[2], parameters[0] * parameters[1])
         elif opcode == 3:

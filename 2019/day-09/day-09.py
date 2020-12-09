@@ -5,11 +5,12 @@ with open('input.txt', 'r') as f:
         int(x) for x in f.readline().split(',')
     ]
 
-# origin_memory = [109, 1, 203, 2, 204, 2, 99] # Input
-# origin_memory = [109, 1, 203, 11, 209, 8, 204, 1, 99, 10, 0, 42, 0]
-
-
-computer = IntcodeComputer(origin_memory, [10])
+# Part 1
+computer = IntcodeComputer(origin_memory, [1])
 computer.run()
-print(computer.outputs)
-print(computer.is_complete)
+print(computer.pop_last_output())
+
+# Part 2
+computer = IntcodeComputer(origin_memory, [2])
+computer.run()
+print(computer.pop_last_output())
