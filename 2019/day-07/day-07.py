@@ -23,14 +23,14 @@ def get_feedback_loop_system_output(phase_settings, memory):
     computer_list[0].append_new_input(0)
 
     current_computer_index = 0
-    while not computer_list[-1].get_is_complete():
+    while not computer_list[-1].is_complete():
         current_computer = computer_list[current_computer_index]
         next_computer_index = (current_computer_index + 1) % len(computer_list)
         next_computer = computer_list[next_computer_index]
 
         current_computer.run()
 
-        if not next_computer.get_is_complete():
+        if not next_computer.is_complete():
             new_output = current_computer.pop_last_output()
             if new_output:
                 next_computer.append_new_input(new_output)

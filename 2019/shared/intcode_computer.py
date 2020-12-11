@@ -3,7 +3,8 @@ class IntcodeComputer:
     inputs = None
     outputs = []
     memory_index = 0
-    is_complete = False
+    complete = False
+    suspended = False
     relative_base = 0
 
     def __init__(self, initial_memory, initial_inputs):
@@ -11,8 +12,8 @@ class IntcodeComputer:
         self.inputs = initial_inputs.copy()
         self.outputs = []
         self.memory_index = 0
-        self.is_complete = False
-        self.is_suspended = False
+        self.complete = False
+        self.suspended = False
         self.relative_base = 0
 
     def extend_memory_to_size(self, size):
@@ -103,10 +104,13 @@ class IntcodeComputer:
 
     def append_new_input(self, new_input):
         self.inputs.append(new_input)
-        self.is_suspended = False
+        self.suspended = False
 
-    def get_is_complete(self):
-        return self.is_complete
+    def is_complete(self):
+        return self.complete
+
+    def is_suspended(self):
+        return self.suspended
 
     def pop_last_output(self):
         try:
@@ -115,11 +119,11 @@ class IntcodeComputer:
             return None
 
     def run(self):
-        while not self.is_complete and not self.is_suspended:
+        while not self.is_complete() and not self.is_suspended():
             instruction = self.memory[self.memory_index]
             cached_memory_index = self.memory_index
             if instruction == 99:
-                self.is_complete = True
+                self.complete = True
                 break
 
             opcode, parameter_modes, write_parameter_indexes = self.read_instruction(instruction)
@@ -128,7 +132,7 @@ class IntcodeComputer:
             try:
                 self.execute_opcode(opcode, parameters)
             except Exception:
-                self.is_suspended = True
+                self.suspended = True
                 break
 
             if self.memory_index == cached_memory_index:

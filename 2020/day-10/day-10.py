@@ -20,7 +20,7 @@ def build_adapter_mapping(adapter_ratings, max_difference):
     return mapping
 
 
-def count_possible_paths_to_end(mapping, current_index, path_length, completed_path_dict):
+def count_possible_paths_to_end(mapping, current_index, path_length, memoized_indexes_dict):
     if current_index == (path_length - 1):
         return 1
 
@@ -28,13 +28,11 @@ def count_possible_paths_to_end(mapping, current_index, path_length, completed_p
     next_indexes = mapping[current_index]
     for next_index in next_indexes:
         try:
-            paths_to_end += completed_path_dict[next_index]
+            paths_to_end += memoized_indexes_dict[next_index]
         except KeyError:
-            paths_to_end += count_possible_paths_to_end(mapping, next_index, path_length, completed_path_dict)
+            paths_to_end += count_possible_paths_to_end(mapping, next_index, path_length, memoized_indexes_dict)
 
-    # Once the number of paths to the end from an index is found, store it in complete_path_dict
-    # so that next time it's reach it won't be checked again.
-    completed_path_dict[current_index] = paths_to_end
+    memoized_indexes_dict[current_index] = paths_to_end
     return paths_to_end
 
 
