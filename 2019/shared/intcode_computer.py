@@ -118,6 +118,11 @@ class IntcodeComputer:
         except IndexError:
             return None
 
+    def get_all_outputs(self):
+        outputs = self.outputs.copy()
+        self.outputs = []
+        return outputs
+
     def run(self):
         while not self.is_complete() and not self.is_suspended():
             instruction = self.memory[self.memory_index]
