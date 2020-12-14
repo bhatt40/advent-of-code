@@ -1,5 +1,7 @@
 import re
 import functools
+from math import gcd
+
 
 class Moon:
     x = None
@@ -22,6 +24,9 @@ class Moon:
 
     def get_position(self):
         return self.x, self.y, self.z
+
+    def get_velocity(self):
+        return self.dx, self.dy, self.dz
 
     def apply_gravity(self, other_bodies):
         for body in other_bodies:
@@ -53,11 +58,49 @@ def calculate_system_energy(moons):
     return functools.reduce(lambda a, b: a + b.calculate_energy(), moons, 0)
 
 
-def system_moon_positions_are_equal(moons, other_moons):
-    return all([
-        moon.get_position() == other_moons[index].get_position()
-        for index, moon in enumerate(moons)
-    ])
+def step_single_axis(positions, velocities):
+    gravity = [
+        [
+            1 if other_position > position else -1 if other_position < position else 0 for other_position in positions
+        ] for position in positions
+    ]
+
+    velocities = [
+        velocity + sum(gravity[index])
+        for index, velocity in enumerate(velocities)
+    ]
+
+    positions = [
+        position + velocities[index]
+        for index, position in enumerate(positions)
+    ]
+
+    return positions, velocities
+
+
+def determine_axis_orbit_period(moons, axis_index):
+    positions = [
+        moon.get_position()[axis_index] for moon in moons
+    ]
+
+    velocities = [
+        moon.get_velocity()[axis_index] for moon in moons
+    ]
+    original_positions = positions.copy()
+    original_velocities = velocities.copy()
+
+    orbit_period = 0
+    while True:
+        positions, velocities = step_single_axis(positions, velocities)
+        orbit_period += 1
+        if positions == original_positions and velocities == original_velocities:
+            break
+
+    return orbit_period
+
+
+def calculate_least_common_multiple(nums):
+    return functools.reduce(lambda a, b: a * b // gcd(a, b), nums)
 
 
 STEPS_TO_APPLY = 1000
@@ -80,16 +123,9 @@ print(calculate_system_energy(moons))
 moons = [
     Moon(string) for string in moon_position_strings
 ]
-initial_moons = [
-    Moon(string) for string in moon_position_strings
-]
 
-step_counter = 0
-while True:
-    step_system_time(moons)
-    if system_moon_positions_are_equal(moons, initial_moons):
-        break
-    step_counter += 1
-    print(step_counter)
+x_orbit_period = determine_axis_orbit_period(moons, 0)
+y_orbit_period = determine_axis_orbit_period(moons, 1)
+z_orbit_period = determine_axis_orbit_period(moons, 2)
 
-print(step_counter)
+print(calculate_least_common_multiple([x_orbit_period, y_orbit_period, z_orbit_period]))
