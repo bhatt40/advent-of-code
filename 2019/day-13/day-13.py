@@ -1,5 +1,4 @@
 from intcode_computer import IntcodeComputer
-import pprint
 
 
 def chunks(lst, n):
