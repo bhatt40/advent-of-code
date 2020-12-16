@@ -151,22 +151,29 @@ print(ore_to_produce_one_fuel)
 
 # Part 2
 min_fuel_produced = TOTAL_ORE_COUNT // ore_to_produce_one_fuel
-leftover_ore = TOTAL_ORE_COUNT % ore_to_produce_one_fuel
-
-p.multiply_all_available_materials(min_fuel_produced)
-p.add_or_consume_material(leftover_ore, ORE)
-
-additional_fuel_produced = 0
-while True:
-    success = p.produce_material(1, FUEL, allow_raw_material_production=False)
-    if not success:
-        break
-    additional_fuel_produced += 1
-    print(additional_fuel_produced)
-print(min_fuel_produced)
-print(min_fuel_produced + additional_fuel_produced)
+p.reset()
+p.produce_material(min_fuel_produced, FUEL)
+print(p.get_raw_material_count())
 
 
+
+# Attempt 2:
+# leftover_ore = TOTAL_ORE_COUNT % ore_to_produce_one_fuel
+# p.multiply_all_available_materials(min_fuel_produced)
+# p.add_or_consume_material(leftover_ore, ORE)
+#
+# additional_fuel_produced = 0
+# while True:
+#     success = p.produce_material(1, FUEL, allow_raw_material_production=False)
+#     if not success:
+#         break
+#     additional_fuel_produced += 1
+#     print(additional_fuel_produced)
+# print(min_fuel_produced)
+# print(min_fuel_produced + additional_fuel_produced)
+
+
+# Attempt 1:
 # p = Production(reactions, ORE)
 # fuel_per_period = 0
 # while True:

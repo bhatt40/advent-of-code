@@ -1,55 +1,41 @@
 
-def append_to_sequence(seq, index, num):
+def get_new_number(game_dict, current_index, prev_num):
     try:
-        seq[index] = num
-    except IndexError:
-        seq = [
-            seq[index] if index < len(seq) else -1
-            for index in range(2 * len(seq))
-        ]
-        seq[index] = num
+        last_occurence = game_dict[prev_num]
+        new_num = current_index - 1 - last_occurence
+    except KeyError:
+        new_num = 0
 
-    return seq
+    return new_num
 
 
-def find_last_instance(seq, index, num):
-    while index >= 0:
-        if seq[index] == num:
-            return index
-        index -= 1
-
-    return None
-
-
-def add_number(seq, prev_nums, current_index):
-    prev_index = current_index - 1
-    prev_num = seq[prev_index]
-    if prev_num in prev_nums:
-        last_index = find_last_instance(seq, current_index - 2, prev_num)
-        seq = append_to_sequence(seq, current_index, prev_index - last_index)
-
-    else:
-        seq = append_to_sequence(seq, current_index, 0)
-    prev_nums.add(prev_num)
-
-    return seq
-
-
-def play_game_for_n_turns(seq, n):
-    previous_numbers = set(seq[0:-1])
-    current_index = len(seq)
-
+def play_game_for_n_turns(game_dict, current_index, prev_num, n):
     while current_index < n:
-        seq = add_number(seq, previous_numbers, current_index)
+        new_num = get_new_number(game_dict, current_index, prev_num)
+        game_dict.update({
+            prev_num: current_index - 1
+        })
+
+        prev_num = new_num
         current_index += 1
 
-    return seq[current_index - 1]
+    return prev_num
 
 
 INPUTS = [6, 3, 15, 13, 1, 0]
 
 # Part 1
-print(play_game_for_n_turns(INPUTS.copy(), 2020))
+game_dict = {
+    value: index
+    for index, value in enumerate(INPUTS)
+}
+
+print(play_game_for_n_turns(game_dict, len(INPUTS), INPUTS[-1], 2020))
 
 # Part 2
-print(play_game_for_n_turns(INPUTS.copy(), 30000000))
+game_dict = {
+    value: index
+    for index, value in enumerate(INPUTS)
+}
+
+print(play_game_for_n_turns(game_dict, len(INPUTS),  INPUTS[-1], 30000000))
