@@ -30,12 +30,15 @@ def apply_memory_address_mask(mask, address):
         '{}' if bit == 'X' else '1' if bit == '1' else binary_address[index]
         for index, bit in enumerate(mask)
     ])
+
     floater_count = binary_address.count('{}')
     products = product('01', repeat=floater_count)
+
     floating_binary_addresses = [
         binary_address.format(*p)
         for p in products
     ]
+
     return [
         int(a, 2) for a in floating_binary_addresses
     ]
