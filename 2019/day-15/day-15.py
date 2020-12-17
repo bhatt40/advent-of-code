@@ -49,13 +49,10 @@ def find_oxygen_system(ic, map, droid_location):
 
         new_location = droid_location + DIRECTION_MAPPING[command]
 
-        # Update map
         map.update({
             new_location: last_status
         })
-        # draw_map(map, droid_location)
 
-        # Move robot
         if last_status == 1:
             droid_location += DIRECTION_MAPPING[command]
 
