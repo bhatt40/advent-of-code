@@ -10,10 +10,46 @@ class Level:
     def append_item(self, x):
         self.characters.append(x)
 
+    def add_parentheses_around_additions(self):
+        # If there is only one expression, evaluate levels and continue.
+        if len(self.characters) <= 3:
+            for item in self.characters:
+                if isinstance(item, Level):
+                    item.add_parentheses_around_additions()
+            return
+
+        index = 0
+        while index < len(self.characters):
+            expression = self.characters[index:index + 3]
+            for item in expression:
+                if isinstance(item, Level):
+                    item.add_parentheses_around_additions()
+            if len(expression) < 3:
+                return
+
+            if expression[1] == '+':
+                new_level = Level(None)
+                for i in range(3):
+                    new_level.append_item(expression[i])
+                before_index = max(0, index)
+                self.characters = self.characters[:before_index] + [new_level] + self.characters[index + 3:]
+            else:
+                index += 2
+
+    def __str__(self):
+        return '{}{}{}'.format(
+            '(',
+            ''.join([ c.__str__() for c in self.characters]),
+            ')'
+        )
+
     def evaluate(self):
         index = 0
         current_expression = []
         value = None
+
+        if len(self.characters) == 1:
+            return self.characters[0].evaluate()
 
         while index < len(self.characters):
             while len(current_expression) < 3:
@@ -67,6 +103,18 @@ with open('input.txt', 'r') as f:
 expressions = [
     parse_expression_string(e) for e in expression_strings
 ]
+values = [
+    e.evaluate() for e in expressions
+]
+print(sum(values))
+
+# Part 2
+expressions = [
+    parse_expression_string(e) for e in expression_strings
+]
+for e in expressions:
+    e.add_parentheses_around_additions()
+
 values = [
     e.evaluate() for e in expressions
 ]
