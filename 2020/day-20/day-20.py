@@ -70,6 +70,12 @@ class Tile:
     def flip(self):
         self.rows.reverse()
 
+    def remove_borders(self):
+        self.rows = [
+            row[1:-1]
+            for row in self.rows[1:-1]
+        ]
+
 
 class Board:
 
@@ -151,6 +157,20 @@ class Board:
         self.tiles[row_index][col_index] = tile
         self.current_tile_index += 1
 
+    def remove_tile_borders(self):
+        for row in self.tiles:
+            for tile in row:
+                tile.remove_borders()
+
+    def get_combined_board(self):
+        return [
+            ''.join([
+                self.tiles[board_row][board_col].rows[tile_row]
+                for board_col in range(self.size)
+                ]
+            ) for board_row in range(self.size) for tile_row in range(len(self.tiles[0][0].rows))
+        ]
+
 
 def solve_using_priority_queue(tiles):
     board_size = int(sqrt(len(tiles.keys())))
@@ -192,6 +212,45 @@ def find_corners(tiles):
     return corner_tiles
 
 
+def parse_sea_monster_pattern(pattern):
+    top = [m.start() for m in re.finditer('#', pattern[0])]
+    mid = [m.start() for m in re.finditer('#', pattern[1])]
+    bot = [m.start() for m in re.finditer('#', pattern[2])]
+    length = len(pattern[0])
+
+    return top, mid, bot, length
+
+
+def count_and_mark_sea_monsters(board, top, mid, bot, length):
+    sea_monster_count = 0
+    for row_index in range(1, len(board) - 1):
+        for col_index in range(len(board[0]) - length):
+            # Start with end of sea monster's tail.
+            if board[row_index][col_index] == '#':
+                if all([
+                    board[row_index - 1][col_index + i] == '#' for i in top
+                ]) and all([
+                    board[row_index][col_index + i] == '#' for i in mid
+                ]) and all([
+                    board[row_index + 1][col_index + i] == '#' for i in bot
+                ]):
+                    sea_monster_count += 1
+                    for i in top:
+                        board[row_index - 1] = board[row_index - 1][:col_index + i] + 'O' + board[row_index - 1][col_index + i + 1:]
+                    for i in mid:
+                        board[row_index] = board[row_index][:col_index + i] + 'O' + board[row_index][col_index + i + 1:]
+                    for i in bot:
+                        board[row_index + 1] = board[row_index + 1][:col_index + i] + 'O' + board[row_index + 1][col_index + i + 1:]
+
+    return sea_monster_count
+
+
+SEA_MONSTER_PATTERN = [
+    '                  # ',
+    '#    ##    ##    ###',
+    ' #  #  #  #  #  #   '
+]
+
 with open('input.txt', 'r') as f:
     lines = f.readlines()
 
@@ -220,4 +279,31 @@ print(reduce(lambda x, y: x*y, corners, 1))
 
 # Part 2
 solved_board = solve_using_priority_queue(tiles)
-solved_board.print_ids()
+solved_board.remove_tile_borders()
+combined_board = solved_board.get_combined_board()
+
+top, mid, bot, length = parse_sea_monster_pattern(SEA_MONSTER_PATTERN)
+
+flips = 0
+rotations = 0
+while flips < 2 and rotations < 4:
+    count = count_and_mark_sea_monsters(combined_board, top, mid, bot, length)
+    if count != 0:
+        print('Found {} sea monsters.\n'.format(count))
+        break
+    if rotations < 4:
+        combined_board = [
+                ''.join(row) for row in zip(*combined_board[::-1])
+            ]
+        rotations += 1
+    else:
+        combined_board.reverse()
+        flips += 1
+        rotations = 0
+
+water_roughness = 0
+for row in combined_board:
+    print(row)
+    water_roughness += len(re.findall('#', row))
+
+print('\nWater roughness: {}'.format(water_roughness))
