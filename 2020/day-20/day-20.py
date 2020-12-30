@@ -2,6 +2,7 @@ import re
 from copy import deepcopy, copy
 from queue import PriorityQueue
 from math import sqrt
+from functools import reduce
 
 
 class Tile:
@@ -45,13 +46,18 @@ class Tile:
         matches = set()
         this_border = self.get_border(border)
         for other_tile in other_tiles:
+            if self.id == other_tile.id:
+                continue
             for other_border in [self.TOP, self.RIGHT, self.BOTTOM, self.LEFT]:
                 other = other_tile.get_border(other_border)
                 if this_border == other[len(other)::-1]:
                     rotations = abs(other_border - border - 2) % 4
                     matches.add((other_tile.id, rotations, False))
                 if this_border == other:
-                    rotations = abs(other_border - border) % 4
+                    # After flip, top becomes bottom and bottom becomes top.
+                    if other_border in [self.TOP, self.BOTTOM]:
+                        other_border = (other_border + 2) % 4
+                    rotations = abs(other_border - border - 2) % 4
                     matches.add((other_tile.id, rotations, True))
 
         return matches
@@ -146,8 +152,7 @@ class Board:
         self.current_tile_index += 1
 
 
-def solve(tiles):
-    solved_boards = []
+def solve_using_priority_queue(tiles):
     board_size = int(sqrt(len(tiles.keys())))
 
     q = PriorityQueue()
@@ -166,10 +171,25 @@ def solve(tiles):
             board_copy = deepcopy(board)
             board_copy.flip_rotate_and_place_tile(tile_id, rotations, is_flipped)
             if board_copy.is_complete:
-                solved_boards.append(board_copy)
+                return board_copy
             q.put((board_copy.priority, board_copy))
 
-    return solved_boards
+    return None
+
+
+def find_corners(tiles):
+    corner_tiles = []
+
+    for tile in tiles.values():
+        matching_borders = set()
+        for border in [tile.TOP, tile.RIGHT, tile.BOTTOM, tile.LEFT]:
+            m = tile.get_matching_borders(border, tiles.values())
+            matching_borders = matching_borders | m
+
+        if len(matching_borders) == 2:
+            corner_tiles.append(tile.id)
+
+    return corner_tiles
 
 
 with open('input.txt', 'r') as f:
@@ -194,9 +214,10 @@ for line in lines:
 
     current_tile.append_row(line.split('\n')[0])
 
-solved_boards = solve(tiles)
-for board in solved_boards:
-    board.print_ids()
-    print('\n')
+# Part 1
+corners = find_corners(tiles)
+print(reduce(lambda x, y: x*y, corners, 1))
 
-
+# Part 2
+solved_board = solve_using_priority_queue(tiles)
+solved_board.print_ids()
