@@ -22,9 +22,10 @@ def move_cups(cup_dict, current_cup_index):
     # Remove next three cups.
     i = (next_three_indexes[0] + 3) % length
     count = 0
-    while i != next_three_indexes[2]:
+    while count < (length - 3):
         cup_dict[(i - 3) % length] = cup_dict[i]
         i = (i + 1) % length
+        count += 1
 
     # Find where removed cups go.
     dest_index = [k for k, v in cup_dict.items() if v == dest][0]
@@ -57,7 +58,7 @@ def print_cups(cup_dict):
 
 # CUPS = '398254716'
 # NUMBER_OF_MOVES = 100
-CUPS = '925836741'
+CUPS = '926574183'
 NUMBER_OF_MOVES = 10
 
 
@@ -66,7 +67,7 @@ cup_dict = {
     for i, v in enumerate(CUPS)
 }
 
-current_cup_index = 1
+current_cup_index = 3
 
 for _ in range(NUMBER_OF_MOVES):
     print_cups(cup_dict)
