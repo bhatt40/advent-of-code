@@ -101,15 +101,15 @@ with open('input.txt', 'r') as f:
 
 
 # Part 1
-# q1 = copy(q1_original)
-# q2 = copy(q2_original)
-# while not q1.empty() and not q2.empty():
-#     play_round(q1, q2)
-#
-# if q1.empty():
-#     print(calculate_score(q2))
-# else:
-#     print(calculate_score(q1))
+q1 = copy(q1_original)
+q2 = copy(q2_original)
+while not q1.empty() and not q2.empty():
+    play_round(q1, q2)
+
+if q1.empty():
+    print(calculate_score(q2))
+else:
+    print(calculate_score(q1))
 
 # Part 2
 q1 = copy(q1_original)
