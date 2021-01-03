@@ -1,4 +1,4 @@
-import re
+import re, functools
 
 
 def parse_rule_string(rule_string):
@@ -55,11 +55,41 @@ for rule_string in rule_strings:
     k, g = parse_rule_string(rule_string)
     rule_mapping[k] = g
 
+# Part 1
 regex_mapping = create_regex_mapping(rule_mapping)
 regex_mapping = {
     k: '^{}$'.format(v) for k, v in regex_mapping.items()
 }
 
+message_is_valid = [
+    bool(re.match(regex_mapping[0], m)) for m in messages
+]
+
+print(sum(message_is_valid))
+
+# Part 2
+
+# New rules:
+#  8: 42 | 42 8 => 42+
+#  11: 42 31 | 42 11 31 => (42 31) | (42 42 31 31) | (42 42 42 31 31 31) | (42 42 42 42 31 31 31 31) | ...
+
+re42 = regex_mapping[42][1:-1]
+re31 = regex_mapping[31][1:-1]
+regex_mapping[8] = '{}'.format(
+    '({})+'.format(re42)
+)
+regex_mapping[11] = '({})'.format(
+    '|'.join([
+        '({}{})'.format(''.join([re42 for _ in range(i)]), ''.join([re31 for _ in range(i)]))
+        for i in range(1, 10)
+    ])
+)
+
+add_to_regex_mapping(0, rule_mapping[0], regex_mapping, rule_mapping)
+
+regex_mapping = {
+    k: '^{}$'.format(v) if k in [0, 8, 11] else v for k, v in regex_mapping.items()
+}
 message_is_valid = [
     bool(re.match(regex_mapping[0], m)) for m in messages
 ]
