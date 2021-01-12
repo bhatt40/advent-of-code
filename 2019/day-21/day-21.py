@@ -32,19 +32,19 @@ with open('input.txt', 'r') as f:
         int(x) for x in f.readline().split(',')
     ]
 
-# # Part 1
-# commands = [
-#     'NOT A J',
-#     'NOT B T',
-#     'AND D T',
-#     'OR T J',
-#     'NOT C T',
-#     'AND D T',
-#     'OR T J',
-#     'WALK'
-# ]
-#
-# survey(commands)
+# Part 1
+commands = [
+    'NOT A J',
+    'NOT B T',
+    'AND D T',
+    'OR T J',
+    'NOT C T',
+    'AND D T',
+    'OR T J',
+    'WALK'
+]
+
+survey(commands)
 
 # Part 2
 commands = [
