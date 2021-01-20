@@ -1,5 +1,10 @@
 from queue import Queue
 import re
+from math import inf
+from functools import lru_cache
+from collections import defaultdict
+import time
+
 
 def build_graph(grid):
     graph = {}
@@ -56,59 +61,55 @@ def find_adjacents(grid, start):
     return adjacents
 
 
-def next_available_moves(graph, current_position, keys_in_hand):
-    moves = {}
+@lru_cache(maxsize=None)
+def next_available_keys(current_position, keys_in_hand):
+    keys = {}
+    distances = defaultdict(lambda: inf)
     q = Queue()
-    q.put((current_position, 0, set()))
+    q.put((current_position, 0))
 
-    def add_new_positions_to_queue(items, prev):
+    def add_new_positions_to_queue(items):
         for new_pos, new_dist in items:
-            if new_pos not in prev:
-                new_prev = prev | {pos}
-                q.put((new_pos, dist + new_dist, new_prev))
+            if dist + new_dist < distances[new_pos]:
+                distances[new_pos] = dist + new_dist
+                q.put((new_pos, dist + new_dist))
 
     while not q.empty():
-        pos, dist, prev = q.get()
+        pos, dist = q.get()
         if 'a' <= pos <= 'z':
             if pos not in keys_in_hand and pos != current_position:
-                moves[pos] = dist
+                keys[pos] = dist
             else:
-                add_new_positions_to_queue(graph[pos].items(), prev)
+                add_new_positions_to_queue(graph[pos].items())
         elif 'A' <= pos <= 'Z':
             if pos.lower() not in keys_in_hand:
                 continue
             else:
-                add_new_positions_to_queue(graph[pos].items(), prev)
+                add_new_positions_to_queue(graph[pos].items())
         else:
-            add_new_positions_to_queue(graph[pos].items(), prev)
+            add_new_positions_to_queue(graph[pos].items())
 
-    return moves
-
-
-def get_shortest_distance(graph, current_position, number_of_keys):
-    shortest_dist = None
-    q = Queue()
-    q.put((current_position, 0, set()))
-
-    while not q.empty():
-        pos, dist_traveled, keys_in_hand = q.get()
-
-        new_keys_in_hand = keys_in_hand.copy()
-        if pos != '@':
-            new_keys_in_hand.add(pos)
-
-        if len(new_keys_in_hand) == number_of_keys:
-            if not shortest_dist or dist_traveled < shortest_dist:
-                shortest_dist = dist_traveled
-        else:
-            next_moves = next_available_moves(graph, pos, new_keys_in_hand)
-            for new_pos, new_dist in next_moves.items():
-                q.put((new_pos, dist_traveled + new_dist, new_keys_in_hand))
-
-    return shortest_dist
+    return keys
 
 
-with open('test.txt', 'r') as f:
+@lru_cache(maxsize=None)
+def minimum_steps(pos, num_to_find, keys_in_hand):
+    if num_to_find == 0:
+        return 0
+
+    min_dist = inf
+
+    for new_pos, dist in next_available_keys(pos, keys_in_hand).items():
+        new_keys_in_hand = frozenset(keys_in_hand | {new_pos})
+        dist += minimum_steps(new_pos, num_to_find - 1, new_keys_in_hand)
+
+        if dist < min_dist:
+            min_dist = dist
+
+    return min_dist
+
+
+with open('input.txt', 'r') as f:
     grid = [
         line.split('\n')[0] for line in f.readlines()
     ]
@@ -119,5 +120,5 @@ number_of_keys = len([
     key for key in graph.keys() if 'a' <= key <= 'z'
 ])
 
-# print(next_available_moves(graph, 'b', {'g', 'd', 'a', 'i', 'f', 'e', 'c'}))
-print(get_shortest_distance(graph, '@', number_of_keys))
+# Part 1
+print(minimum_steps('@', number_of_keys, frozenset()))
