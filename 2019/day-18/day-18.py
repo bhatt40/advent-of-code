@@ -7,17 +7,13 @@ from collections import defaultdict
 
 def build_graph(grid):
     graph = {}
-    start_position = None
 
     for r, row in enumerate(grid):
         for c, col in enumerate(row):
             if col not in '.#':
                 graph[col] = find_adjacents(grid, (r, c))
 
-            if col == '@':
-                start_position = (r, c)
-
-    return graph, start_position
+    return graph
 
 
 def get_neighbors(grid, node):
@@ -99,7 +95,8 @@ def minimum_steps(positions, num_to_find, keys_in_hand):
 
     min_dist = inf
 
-    for new_pos, dist, index in next_available_keys(positions, keys_in_hand):
+    next_keys = next_available_keys(positions, keys_in_hand)
+    for new_pos, dist, index in next_keys:
         new_keys_in_hand = frozenset(keys_in_hand | {new_pos})
         positions = tuple([
             new_pos if i == index else p
@@ -113,12 +110,18 @@ def minimum_steps(positions, num_to_find, keys_in_hand):
     return min_dist
 
 
-with open('input.txt', 'r') as f:
+def print_grid(grid):
+    for row in grid:
+        print(row)
+    print('\n')
+
+
+with open('test.txt', 'r') as f:
     grid = [
         line.split('\n')[0] for line in f.readlines()
     ]
 
-graph, starting_position = build_graph(grid)
+graph = build_graph(grid)
 graphs = [graph]
 
 number_of_keys = len([
@@ -126,4 +129,34 @@ number_of_keys = len([
 ])
 
 # Part 1
-print(minimum_steps(('@',), number_of_keys, frozenset()))
+# print(minimum_steps(('@',), number_of_keys, frozenset()))
+
+# Part 2
+height = len(grid)
+vert_center = (height - 1) // 2
+width = len(grid[0])
+hor_center = (width - 1) // 2
+grid[vert_center - 1] = grid[vert_center - 1][:hor_center - 1] + '@#@' + grid[vert_center - 1][hor_center + 2:]
+grid[vert_center] = grid[vert_center][:hor_center - 1] + '###' + grid[vert_center][hor_center + 2:]
+grid[vert_center + 1] = grid[vert_center + 1][:hor_center - 1] + '@#@' + grid[vert_center + 1][hor_center + 2:]
+
+subgrid_1 = [
+    row[:hor_center + 1] for row in grid[0:vert_center + 1]
+]
+subgrid_2 = [
+    row[hor_center:] for row in grid[0:vert_center + 1]
+]
+subgrid_3 = [
+    row[0:hor_center + 1] for row in grid[vert_center:]
+]
+subgrid_4 = [
+    row[hor_center:] for row in grid[vert_center:]
+]
+
+graphs = [
+    build_graph(subgrid) for subgrid in [subgrid_1, subgrid_2, subgrid_3, subgrid_4]
+]
+positions = tuple([
+    '@' for _ in range(4)
+])
+print(minimum_steps(positions, number_of_keys, frozenset()))
