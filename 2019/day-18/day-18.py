@@ -98,10 +98,8 @@ def minimum_steps(positions, num_to_find, keys_in_hand):
     next_keys = next_available_keys(positions, keys_in_hand)
     for new_pos, dist, index in next_keys:
         new_keys_in_hand = frozenset(keys_in_hand | {new_pos})
-        positions = tuple([
-            new_pos if i == index else p
-            for i, p in enumerate(positions)
-        ])
+        old_pos = positions[index]
+        positions = positions.replace(old_pos, new_pos)
         dist += minimum_steps(positions, num_to_find - 1, new_keys_in_hand)
 
         if dist < min_dist:
@@ -129,16 +127,16 @@ number_of_keys = len([
 ])
 
 # Part 1
-# print(minimum_steps(('@',), number_of_keys, frozenset()))
+# print(minimum_steps('@', number_of_keys, frozenset()))
 
 # Part 2
 height = len(grid)
 vert_center = (height - 1) // 2
 width = len(grid[0])
 hor_center = (width - 1) // 2
-grid[vert_center - 1] = grid[vert_center - 1][:hor_center - 1] + '@#@' + grid[vert_center - 1][hor_center + 2:]
+grid[vert_center - 1] = grid[vert_center - 1][:hor_center - 1] + '1#2' + grid[vert_center - 1][hor_center + 2:]
 grid[vert_center] = grid[vert_center][:hor_center - 1] + '###' + grid[vert_center][hor_center + 2:]
-grid[vert_center + 1] = grid[vert_center + 1][:hor_center - 1] + '@#@' + grid[vert_center + 1][hor_center + 2:]
+grid[vert_center + 1] = grid[vert_center + 1][:hor_center - 1] + '3#4' + grid[vert_center + 1][hor_center + 2:]
 
 subgrid_1 = [
     row[:hor_center + 1] for row in grid[0:vert_center + 1]
@@ -156,7 +154,7 @@ subgrid_4 = [
 graphs = [
     build_graph(subgrid) for subgrid in [subgrid_1, subgrid_2, subgrid_3, subgrid_4]
 ]
-positions = tuple([
-    '@' for _ in range(4)
+positions = ''.join([
+    str(x+1) for x in range(4)
 ])
 print(minimum_steps(positions, number_of_keys, frozenset()))
