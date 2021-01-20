@@ -57,33 +57,32 @@ def find_adjacents(grid, start):
 
 
 @lru_cache(maxsize=None)
-def next_available_keys(current_positions, keys_in_hand):
+def next_available_keys(current_position, keys_in_hand):
     keys = []
     distances = defaultdict(lambda: inf)
     q = Queue()
-    for index, current_position in enumerate(current_positions):
-        q.put((current_position, 0, index))
+    q.put((current_position, 0))
 
-    def add_new_positions_to_queue(items, index):
+    def add_new_positions_to_queue(items):
         for new_pos, new_dist in items:
             if dist + new_dist < distances[new_pos]:
                 distances[new_pos] = dist + new_dist
-                q.put((new_pos, dist + new_dist, index))
+                q.put((new_pos, dist + new_dist))
 
     while not q.empty():
-        pos, dist, index = q.get()
+        pos, dist = q.get()
         if 'a' <= pos <= 'z':
-            if pos not in keys_in_hand and pos != current_positions[index]:
-                keys.append((pos, dist, index))
+            if pos not in keys_in_hand and pos != current_position:
+                keys.append((pos, dist))
             else:
-                add_new_positions_to_queue(graphs[index][pos].items(), index)
+                add_new_positions_to_queue(graph[pos].items())
         elif 'A' <= pos <= 'Z':
             if pos.lower() not in keys_in_hand:
                 continue
             else:
-                add_new_positions_to_queue(graphs[index][pos].items(), index)
+                add_new_positions_to_queue(graph[pos].items())
         else:
-            add_new_positions_to_queue(graphs[index][pos].items(), index)
+            add_new_positions_to_queue(graph[pos].items())
 
     return keys
 
@@ -95,15 +94,15 @@ def minimum_steps(positions, num_to_find, keys_in_hand):
 
     min_dist = inf
 
-    next_keys = next_available_keys(positions, keys_in_hand)
-    for new_pos, dist, index in next_keys:
-        new_keys_in_hand = frozenset(keys_in_hand | {new_pos})
-        old_pos = positions[index]
-        positions = positions.replace(old_pos, new_pos)
-        dist += minimum_steps(positions, num_to_find - 1, new_keys_in_hand)
+    for position in positions:
+        next_keys = next_available_keys(position, keys_in_hand)
+        for new_pos, dist in next_keys:
+            new_keys_in_hand = frozenset(keys_in_hand | {new_pos})
+            new_positions = positions.replace(position, new_pos)
+            dist += minimum_steps(new_positions, num_to_find - 1, new_keys_in_hand)
 
-        if dist < min_dist:
-            min_dist = dist
+            if dist < min_dist:
+                min_dist = dist
 
     return min_dist
 
@@ -114,7 +113,7 @@ def print_grid(grid):
     print('\n')
 
 
-with open('test.txt', 'r') as f:
+with open('input.txt', 'r') as f:
     grid = [
         line.split('\n')[0] for line in f.readlines()
     ]
@@ -127,9 +126,12 @@ number_of_keys = len([
 ])
 
 # Part 1
-# print(minimum_steps('@', number_of_keys, frozenset()))
+print(minimum_steps('@', number_of_keys, frozenset()))
 
 # Part 2
+next_available_keys.cache_clear()
+minimum_steps.cache_clear()
+
 height = len(grid)
 vert_center = (height - 1) // 2
 width = len(grid[0])
@@ -138,22 +140,7 @@ grid[vert_center - 1] = grid[vert_center - 1][:hor_center - 1] + '1#2' + grid[ve
 grid[vert_center] = grid[vert_center][:hor_center - 1] + '###' + grid[vert_center][hor_center + 2:]
 grid[vert_center + 1] = grid[vert_center + 1][:hor_center - 1] + '3#4' + grid[vert_center + 1][hor_center + 2:]
 
-subgrid_1 = [
-    row[:hor_center + 1] for row in grid[0:vert_center + 1]
-]
-subgrid_2 = [
-    row[hor_center:] for row in grid[0:vert_center + 1]
-]
-subgrid_3 = [
-    row[0:hor_center + 1] for row in grid[vert_center:]
-]
-subgrid_4 = [
-    row[hor_center:] for row in grid[vert_center:]
-]
-
-graphs = [
-    build_graph(subgrid) for subgrid in [subgrid_1, subgrid_2, subgrid_3, subgrid_4]
-]
+graph = build_graph(grid)
 positions = ''.join([
     str(x+1) for x in range(4)
 ])
