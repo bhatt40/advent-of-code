@@ -14,7 +14,7 @@ def get_neighbors(grid, node):
                 yield r2, c2
 
 
-def find_adjacents(grid, start):
+def add_adjacents(grid, graph, src, start, find_portals=False):
     visited = {start}
     adjacents = {}
 
@@ -33,22 +33,35 @@ def find_adjacents(grid, start):
             value = grid[r][c]
 
             if re.match(r'[a-zA-Z]', value):
-                adjacents[value] = min(n_dist, adjacents[value]) if value in adjacents else n_dist
+                if find_portals and n_dist == 1:
+                    src = ''.join(sorted([src, value]))
+                else:
+                    if find_portals:
+                        for value_neighbor in get_neighbors(grid, neighbor):
+                            v_r, v_c = value_neighbor
+                            value_neighbor_value = grid[v_r][v_c]
+                            if re.match(r'[a-zA-Z]', value_neighbor_value):
+                                value = ''.join(sorted([value, value_neighbor_value]))
+
+                    offset = 2 if find_portals else 0
+                    adjacents[value] = min(n_dist - offset, adjacents[value]) if value in adjacents else n_dist - offset
                 continue
 
             q.put((n_dist, neighbor))
 
         visited.add(node)
 
-    return adjacents
+    graph[src].update(adjacents)
+
+    return graph
 
 
-def build_graph(grid):
+def build_graph(grid, find_portals=False):
     graph = defaultdict(dict)
 
     for r, row in enumerate(grid):
         for c, col in enumerate(row):
             if col not in '.# ':
-                graph[col].update(find_adjacents(grid, (r, c)))
+                graph = add_adjacents(grid, graph, col, (r, c), find_portals)
 
     return graph
