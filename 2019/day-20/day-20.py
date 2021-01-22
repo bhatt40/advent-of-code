@@ -17,14 +17,14 @@ def find_shortest_paths(graph, src):
 
         neighbors = graph[current_node]
         for neighbor, dist in neighbors.items():
-            new_dist = distances[current_node][0] + dist
+            new_dist = distances[current_node][0] + dist[0]
             if new_dist < distances[neighbor][0]:
                 distances[neighbor] = (new_dist, portals_passed_to_current_node + 1)
 
     return distances
 
 
-with open('input.txt', 'r') as f:
+with open('test.txt', 'r') as f:
     grid = [
         line.split('\n')[0] for line in f.readlines()
     ]

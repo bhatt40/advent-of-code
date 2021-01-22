@@ -37,14 +37,38 @@ def add_adjacents(grid, graph, src, start, find_portals=False):
                     src = ''.join(sorted([src, value]))
                 else:
                     if find_portals:
-                        for value_neighbor in get_neighbors(grid, neighbor):
+                        for index, value_neighbor in enumerate(get_neighbors(grid, neighbor)):
                             v_r, v_c = value_neighbor
                             value_neighbor_value = grid[v_r][v_c]
                             if re.match(r'[a-zA-Z]', value_neighbor_value):
                                 value = ''.join(sorted([value, value_neighbor_value]))
+                                # Determine if inner or outer portal by moving one more in same direction and one or
+                                # more in opposite direction. If it's an outer portal, one of these will be outside
+                                # of the grid.
+                                next_r = (2 * (v_r - r)) + r
+                                next_c = (2 * (v_c - c)) + c
+                                opp_r = (-1 * (v_r - r)) + r
+                                opp_c = (-1 * (v_c - c)) + c
+                                try:
+                                    if all([
+                                        0 <= next_r <= len(grid),
+                                        0 <= next_c <= len(grid[next_r]),
+                                        0 <= opp_r <= len(grid),
+                                        0 <= opp_c <= len(grid[opp_r])
+                                    ]):
+                                        portal_type = 'i'
+                                    else:
+                                        portal_type = 'o'
+                                except IndexError:
+                                    portal_type = 'o'
 
-                    offset = 2 if find_portals else 0
-                    adjacents[value] = min(n_dist - offset, adjacents[value]) if value in adjacents else n_dist - offset
+                        adjacents[value] = (
+                            min(n_dist - 2, adjacents[value][0]) if value in adjacents else n_dist - 2,
+                            portal_type
+                        )
+                    else:
+                        adjacents[value] = min(n_dist, adjacents[value]) if value in adjacents else n_dist
+
                 continue
 
             q.put((n_dist, neighbor))
