@@ -51,10 +51,10 @@ def add_adjacents(grid, graph, src, start, find_portals=False):
                                 opp_c = (-1 * (v_c - c)) + c
                                 try:
                                     if all([
-                                        0 <= next_r <= len(grid),
-                                        0 <= next_c <= len(grid[next_r]),
-                                        0 <= opp_r <= len(grid),
-                                        0 <= opp_c <= len(grid[opp_r])
+                                        0 <= next_r < len(grid),
+                                        0 <= next_c < len(grid[next_r]),
+                                        0 <= opp_r < len(grid),
+                                        0 <= opp_c < len(grid[opp_r])
                                     ]):
                                         portal_type = 'i'
                                     else:
