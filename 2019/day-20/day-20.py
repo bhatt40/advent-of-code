@@ -4,22 +4,21 @@ from math import inf
 
 
 def find_shortest_paths(graph, src):
-    distances = defaultdict(lambda: (inf, 0))
-    distances[src] = (0, -1)
+    distances = defaultdict(lambda: inf)
+    distances[src] = 0
     complete_set = set()
     incomplete_set = set(graph.keys())
 
     while len(incomplete_set) > 0:
-        current_node = min(incomplete_set, key=lambda x: distances[x][0])
-        portals_passed_to_current_node = distances[current_node][1]
+        current_node = min(incomplete_set, key=lambda x: distances[x])
         complete_set.add(current_node)
         incomplete_set.remove(current_node)
 
         neighbors = graph[current_node]
         for neighbor, dist in neighbors.items():
-            new_dist = distances[current_node][0] + dist[0]
-            if new_dist < distances[neighbor][0]:
-                distances[neighbor] = (new_dist, portals_passed_to_current_node + 1)
+            new_dist = distances[current_node] + dist
+            if new_dist < distances[neighbor]:
+                distances[neighbor] = new_dist
 
     return distances
 
@@ -78,17 +77,17 @@ def distance_to_destination(graph, current, dest_node, visited, previous_neighbo
         else:
             distance = distance_to_destination(graph, (neighbor, portal_type, next_level, dist), dest_node,
                                            new_visited, new_previous_neighbors, max_level, stored_distances) + 1
-            stored_distances[(neighbor, next_level)] = distance
 
         distances.add(distance + current_dist)
 
-    if len(distances) == 0:
-        return inf
+    smallest_distance = inf if len(distances) == 0 else min(distances)
 
-    return min(distances)
+    stored_distances[(current_node, current_level)] = smallest_distance
+
+    return smallest_distance
 
 
-with open('input.txt', 'r') as f:
+with open('test.txt', 'r') as f:
     grid = [
         line.split('\n')[0] for line in f.readlines()
     ]
@@ -96,9 +95,11 @@ with open('input.txt', 'r') as f:
 graph = build_graph(grid, find_portals=True)
 
 # Part 1
-# distances = find_shortest_paths(graph, 'AA')
-# print(sum(distances['ZZ']))
+distances = find_shortest_paths(graph, ('AA', 'o'))
+print(distances)
 
 # Part 2
-distance = distance_to_destination(graph, ('AA', 'o', 0, 0), 'ZZ', [], set(), 60, {})
-print(distance)
+# stored_distances = {}
+# distance = distance_to_destination(graph, ('AA', 'o', 0, 0), 'ZZ', [], set(), 50, stored_distances)
+# print(distance)
+# print(stored_distances)
