@@ -23,71 +23,57 @@ def find_shortest_paths(graph, src):
     return distances
 
 
-def distance_to_destination(graph, current, dest_node, visited, previous_neighbors, max_level, stored_distances):
+def distance_to_destination(graph, current, dest_node, visited, max_level):
     current_node, current_portal_type, current_level, current_dist = current
 
+    if current_node == 'ZZ':
+        if current_level == 0:
+            return current_dist
+        else:
+            return inf
+
     new_visited = visited.copy()
-    new_visited.append((current_node, current_level))
+    new_visited.append(((current_node, current_portal_type), current_level))
 
-    neighbors = graph[current_node]
+    neighbors = graph[(current_node, current_portal_type)]
+    opposite_node = (current_node, 'i' if current_portal_type == 'o' else 'o')
+
+    # If portal hasn't been crossed, next move is to cross portal. Otherwise, cycle through all neighbors.
+    next_nodes = neighbors
+    if len(visited):
+        last_visited_node = visited[-1][0]
+        if opposite_node != last_visited_node and current_node not in ['AA', 'ZZ']:
+            next_nodes = {
+                n: v for n, v in neighbors.items() if n == opposite_node
+            }
+
     distances = set()
-    new_previous_neighbors = set([
-        (k, t) for k, (d, t) in neighbors.items()
-    ]) | {(current_node, 'i' if current_portal_type == 'o' else 'o')}
+    for (neighbor, portal_type), dist in next_nodes.items():
+        next_level = current_level
+        if neighbor == current_node:
+            next_level += 1 if portal_type == 'o' else -1
 
-    for neighbor, (dist, portal_type) in neighbors.items():
-        # If a neighbor was in the previous set of neighbors, then it was on the other side of the portal that we
-        # just crossed, so it should be ignored.
-        if (neighbor, portal_type) in previous_neighbors:
-            continue
-
-        next_level = (current_level + 1) if portal_type == 'i' else (current_level - 1)
-        if (neighbor, next_level) in new_visited:
+        if ((neighbor, portal_type), next_level) in new_visited:
             continue
 
         if neighbor == 'AA':
             continue
 
-        if neighbor == 'ZZ':
-            if current_level == 0:
-                distances.add(current_dist + dist)
-
-                prev_node = None
-                sum = 0
-                for node, level in new_visited:
-                    print('{} >> {}({})'.format(
-                        graph[prev_node][node][0] if prev_node else '',
-                        node,
-                        level
-                    ))
-                    sum += graph[prev_node][node][0] + 1 if prev_node else 0
-                    prev_node = node
-
-                sum += dist
-
-                print(sum)
-
-            continue
-
         if next_level > max_level or next_level < 0:
             continue
 
-        if (neighbor, next_level) in stored_distances:
-            distance = stored_distances[(neighbor, next_level)]
         else:
             distance = distance_to_destination(graph, (neighbor, portal_type, next_level, dist), dest_node,
-                                           new_visited, new_previous_neighbors, max_level, stored_distances) + 1
+                                           new_visited, max_level)
 
         distances.add(distance + current_dist)
 
     smallest_distance = inf if len(distances) == 0 else min(distances)
 
-    stored_distances[(current_node, current_level)] = smallest_distance
-
     return smallest_distance
 
 
-with open('test.txt', 'r') as f:
+with open('input.txt', 'r') as f:
     grid = [
         line.split('\n')[0] for line in f.readlines()
     ]
@@ -96,10 +82,8 @@ graph = build_graph(grid, find_portals=True)
 
 # Part 1
 distances = find_shortest_paths(graph, ('AA', 'o'))
-print(distances)
+print(distances[('ZZ', 'o')])
 
 # Part 2
-# stored_distances = {}
-# distance = distance_to_destination(graph, ('AA', 'o', 0, 0), 'ZZ', [], set(), 50, stored_distances)
-# print(distance)
-# print(stored_distances)
+distance = distance_to_destination(graph, ('AA', 'o', 0, 0), 'ZZ', [], 25)
+print(distance)
